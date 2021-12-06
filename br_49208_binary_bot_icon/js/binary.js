@@ -10933,7 +10933,7 @@ var getTopLevelDomain = __webpack_require__(/*! ../../_common/utility */ "./src/
 var getHostname = __webpack_require__(/*! ../../_common/utility */ "./src/javascript/_common/utility.js").getHostname;
 var template = __webpack_require__(/*! ../../_common/utility */ "./src/javascript/_common/utility.js").template;
 var Language = __webpack_require__(/*! ../../_common/language */ "./src/javascript/_common/language.js");
-var isEuCountry = __webpack_require__(/*! ../../app/common/country_base */ "./src/javascript/app/common/country_base.js").isEuCountry;
+var isEuCountry = __webpack_require__(/*! ../common/country_base */ "./src/javascript/app/common/country_base.js").isEuCountry;
 var isEuCountrySelected = __webpack_require__(/*! ../../_common/utility */ "./src/javascript/_common/utility.js").isEuCountrySelected;
 
 var header_icon_base_path = '/images/pages/header/';
