@@ -711,9 +711,35 @@ var ClientBase = function () {
         return is_current ? currency && !get('is_virtual') && has_account_criteria && !isCryptocurrency(currency) : has_account_criteria;
     };
 
-    // Restrict binary options display on australian residence clients
+    var isDXTradeAllowed = function isDXTradeAllowed() {
+        // Stop showing DerivX for non-logged in EU users
+        var landing_companies = State.getResponse('landing_company');
+        var client_country = get('residence') || State.getResponse('website_status.clients_country');
+
+        return !!('dxtrade_financial_company' in landing_companies || 'dxtrade_gaming_company' in landing_companies || !client_country || !landing_companies || !Object.keys(landing_companies).length);
+    };
+
+    var isMF = function isMF() {
+        var landing_company_shortcode = get('landing_company_shortcode') || State.getResponse('landing_company.gaming_company.shortcode');
+        return landing_company_shortcode === 'maltainvest';
+    };
+
+    var isMT5Allowed = function isMT5Allowed() {
+        // default allowing mt5 to true before landing_companies gets populated
+        // since most clients are allowed to use mt5
+        var landing_companies = State.getResponse('landing_company');
+
+        return !!('mt_financial_company' in landing_companies || 'mt_gaming_company' in landing_companies || !landing_companies || !Object.keys(landing_companies).length);
+    };
+
+    var isMultipliersOnly = function isMultipliersOnly() {
+        var multipliers_only_countries = ['de', 'es', 'it', 'lu', 'gr', 'au', 'fr'];
+        var country = get('country') || State.getResponse('authorize.country');
+        return multipliers_only_countries.includes(country);
+    };
+    // Restrict binary options display on clients with Australian and French residence
     var isOptionsBlocked = function isOptionsBlocked() {
-        var options_blocked_countries = ['au'];
+        var options_blocked_countries = ['au', 'fr'];
         var country = get('country') || State.getResponse('authorize.country');
         return options_blocked_countries.includes(country);
     };
@@ -771,7 +797,11 @@ var ClientBase = function () {
 
     return {
         init: init,
+        isDXTradeAllowed: isDXTradeAllowed,
         isLoggedIn: isLoggedIn,
+        isMF: isMF,
+        isMT5Allowed: isMT5Allowed,
+        isMultipliersOnly: isMultipliersOnly,
         isValidLoginid: isValidLoginid,
         set: set,
         get: get,
@@ -10904,6 +10934,7 @@ var getHostname = __webpack_require__(/*! ../../_common/utility */ "./src/javasc
 var template = __webpack_require__(/*! ../../_common/utility */ "./src/javascript/_common/utility.js").template;
 var Language = __webpack_require__(/*! ../../_common/language */ "./src/javascript/_common/language.js");
 var isEuCountry = __webpack_require__(/*! ../common/country_base */ "./src/javascript/app/common/country_base.js").isEuCountry;
+var isEuCountrySelected = __webpack_require__(/*! ../../_common/utility */ "./src/javascript/_common/utility.js").isEuCountrySelected;
 
 var header_icon_base_path = '/images/pages/header/';
 
@@ -11033,10 +11064,13 @@ var Header = function () {
         if (platform_list.hasChildNodes()) {
             return;
         }
-        var main_domain = getHostname();
+        var client_country = Client.get('residence') || State.getResponse('website_status.clients_country');
         var is_logged_in = Client.isLoggedIn();
-        var has_dxtrade = !!(State.getResponse('landing_company.dxtrade_gaming_company') || State.getResponse('landing_company.dxtrade_gaming_company'));
-        var should_show_xtrade = is_logged_in ? has_dxtrade : !isEuCountry();
+        var main_domain = getHostname();
+        var should_show_bots = Client.isAccountOfType('virtual') ? !Client.isMultipliersOnly() : !Client.isMF() && !Client.isOptionsBlocked();
+        var should_show_dmt5 = !is_logged_in || Client.isMT5Allowed();
+        var should_show_xtrade = is_logged_in ? Client.isDXTradeAllowed() : !isEuCountry() && !isEuCountrySelected(client_country);
+
         var platforms = _extends({
             dtrader: {
                 name: 'DTrader',
@@ -11044,14 +11078,16 @@ var Header = function () {
                 link: main_domain,
                 icon: 'ic-brand-dtrader.svg',
                 on_mobile: true
-            },
+            }
+        }, should_show_bots ? {
             dbot: {
                 name: 'DBot',
                 desc: localize('Automated trading at your fingertips. No coding needed.'),
                 link: main_domain + '/bot',
                 icon: 'ic-brand-dbot.svg',
-                on_mobile: false
-            },
+                on_mobile: true
+            }
+        } : {}, should_show_dmt5 ? {
             dmt5: {
                 name: 'DMT5',
                 desc: localize('Trade on Deriv MetaTrader 5 (DMT5), the all-in-one FX and CFD trading platform.'),
@@ -11060,7 +11096,7 @@ var Header = function () {
                 on_mobile: true
 
             }
-        }, should_show_xtrade ? {
+        } : {}, should_show_xtrade ? {
             derivx: {
                 name: 'Deriv X',
                 desc: localize('Trade FX and CFDs on a customisable, easy-to-use trading platform.'),
@@ -11076,7 +11112,15 @@ var Header = function () {
                 icon: 'logo_smart_trader.svg',
                 on_mobile: true
             }
-        });
+        }, should_show_bots ? {
+            binarybot: {
+                name: 'Binary Bot',
+                desc: localize('Our classic “drag-and-drop” tool for creating trading bots, featuring pop-up trading charts, for advanced users.'),
+                link: 'https://bot.deriv.com',
+                icon: 'ic-brand-binarybot.svg',
+                on_mobile: true
+            }
+        } : {});
 
         Object.keys(platforms).forEach(function (key) {
             var platform = platforms[key];
