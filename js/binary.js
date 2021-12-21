@@ -13731,10 +13731,10 @@ var ChartSettings = function () {
 
             // need to pass is_tick_trade params explicitly to return correct label when switching between ticks and non-ticks charts
             getEndTime: function getEndTime(is_tick_trade) {
-                return '<div class=\'nowrap gr-padding-10 gr-parent chart-legend-label\'><span style="' + common_vertical_line_style + ' border-color: var(--brand-orange-1); border-style: dashed;"></span>' + (is_tick_trade ? localize('Exit spot') : localize('End time')) + '&nbsp;</div>';
+                return '<div class=\'nowrap gr-padding-10 gr-parent chart-legend-label\'><span style="' + common_vertical_line_style + ' ' + (is_tick_trade ? 'border-color: var(--brand-orange-1);' : 'border-color: var(--brand-red-coral);') + ' border-style: dashed;"></span>' + (is_tick_trade ? localize('Exit spot') : localize('End time')) + '&nbsp;</div>';
             },
             getStartTime: function getStartTime(is_tick_trade) {
-                return '<div class=\'nowrap gr-padding-10 gr-parent chart-legend-label\'><span style="' + common_vertical_line_style + ' border-color: var(--brand-orange-1); border-style: solid;"></span>' + (is_tick_trade ? localize('Entry spot') : localize('Start time')) + '&nbsp;</div>';
+                return '<div class=\'nowrap gr-padding-10 gr-parent chart-legend-label\'><span style="' + common_vertical_line_style + ' ' + (is_tick_trade ? 'border-color: var(--brand-orange-1);' : 'border-color: var(--brand-red-coral);') + ' border-style: solid;"></span>' + (is_tick_trade ? localize('Entry spot') : localize('Start time')) + '&nbsp;</div>';
             }
         };
 
@@ -22537,6 +22537,7 @@ var Tick = __webpack_require__(/*! ./tick */ "./src/javascript/app/pages/trade/t
 var BinarySocket = __webpack_require__(/*! ../../base/socket */ "./src/javascript/app/base/socket.js");
 var getMinPayout = __webpack_require__(/*! ../../common/currency */ "./src/javascript/app/common/currency.js").getMinPayout;
 var isCryptocurrency = __webpack_require__(/*! ../../common/currency */ "./src/javascript/app/common/currency.js").isCryptocurrency;
+var isEuCountry = __webpack_require__(/*! ../../common/country_base */ "./src/javascript/app/common/country_base.js").isEuCountry;
 var elementInnerHtml = __webpack_require__(/*! ../../../_common/common_functions */ "./src/javascript/_common/common_functions.js").elementInnerHtml;
 var getElementById = __webpack_require__(/*! ../../../_common/common_functions */ "./src/javascript/_common/common_functions.js").getElementById;
 var getVisibleElement = __webpack_require__(/*! ../../../_common/common_functions */ "./src/javascript/_common/common_functions.js").getVisibleElement;
@@ -22551,7 +22552,7 @@ var Process = function () {
      */
     var processActiveSymbols = function processActiveSymbols(country) {
         BinarySocket.send({ active_symbols: 'brief' }).then(function (response) {
-            if (response.active_symbols && response.active_symbols.length) {
+            if (!isEuCountry() && response.active_symbols && response.active_symbols.length) {
                 // populate the Symbols object
                 Symbols.details(response);
 
@@ -29169,7 +29170,7 @@ var binary_desktop_app_id = 14473;
 
 var getAppId = function getAppId() {
     var app_id = null;
-    var user_app_id = '30707'; // you can insert Application ID of your registered application here
+    var user_app_id = ''; // you can insert Application ID of your registered application here
     var config_app_id = window.localStorage.getItem('config.app_id');
     var is_new_app = /\/app\//.test(window.location.pathname);
     if (config_app_id) {
