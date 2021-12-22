@@ -11067,7 +11067,8 @@ var Header = function () {
         var client_country = Client.get('residence') || State.getResponse('website_status.clients_country');
         var is_logged_in = Client.isLoggedIn();
         var main_domain = getHostname();
-        var should_show_bots = Client.isAccountOfType('virtual') ? !Client.isMultipliersOnly() : !Client.isMF() && !Client.isOptionsBlocked();
+        var should_show_bots_when_logged_in = Client.isAccountOfType('virtual') ? !Client.isMultipliersOnly() : !Client.isMF() && !Client.isOptionsBlocked();
+        var should_show_bots = is_logged_in ? should_show_bots_when_logged_in : !isEuCountry();
         var should_show_dmt5 = !is_logged_in || Client.isMT5Allowed();
         var should_show_xtrade = is_logged_in ? Client.isDXTradeAllowed() : !isEuCountry() && !isEuCountrySelected(client_country);
 
